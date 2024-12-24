@@ -17,3 +17,11 @@ class Note:
         self.deadline = deadline
         self.text = text
         self.timer = None
+    def schedule(self):
+        delay = (self.deadline - datetime.now()).total_seconds()
+        if delay > 0:
+            self.timer = Timer(delay, self.trigger)
+            self.timer.start()
+            logger.info(f"Заметка создана: ID={self.note_id}, Дедлайн={self.deadline}, Текст={self.text}")
+        else:
+            logger.warning(f"Заметка {self.note_id} имеет прошедший дедлайн.")
