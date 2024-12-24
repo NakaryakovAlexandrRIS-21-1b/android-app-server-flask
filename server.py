@@ -123,3 +123,14 @@ if note_id < 0:
             return jsonify({"error": f"Заметка {note_id} не найдена."}), 404
 
 
+@app.route('/get_notes', methods=['GET'])
+def get_notes():
+    try:
+        with notes_lock:
+            active_note_ids = list(notes.keys())
+        return jsonify({"notes": active_note_ids}), 200
+
+    except Exception as e:
+        return jsonify({"error": "Ошибка при получении заметок.", "details": str(e)}), 500
+
+
