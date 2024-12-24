@@ -134,3 +134,46 @@ def get_notes():
         return jsonify({"error": "Ошибка при получении заметок.", "details": str(e)}), 500
 
 
+@app.route('/update_note', methods=['PUT'])
+def update_note():
+    try:
+        #force=True: Позволяет парсить данные даже если Content-Type не установлен как application/json.
+        #silent=True: Не выбрасывает исключение, если JSON некорректный, вместо этого возвращает None.
+        data = request.get_json(force=True, silent=True)
+
+        if data is None:
+            return jsonify({"error": "Тело запроса должно быть корректным JSON."}), 400
+        
+        if not isinstance(data, dict):
+            return jsonify({"error": "JSON должен быть объектом (словарем)."}), 400
+        
+        # Проверка данных
+        validate_response = validate_request_data(data)
+        if isinstance(validate_response, tuple) and len(validate_response) == 4:
+            note_id, deadline_hours, deadline_minutes, text = validate_response
+        else:
+            # Если возвращается ошибка из validate_request_data
+            return validate_response
+
+        note_id, deadline_hours, deadline_minutes, text = validate_response
+
+        deadline = datetime.now().replace(hour=deadline_hours, minute=deadline_minutes, second=0, microsecond=0)
+        if deadline < datetime.now():
+            deadline += timedelta(days=1)
+
+        with notes_lock:
+            note = notes.get(note_id)
+            if note:
+                note.cancel()
+
+            updated_note = Note(note_id, deadline, text)
+            notes[note_id] = updated_note
+            updated_note.schedule()
+
+        logger.info(f"Заметка обновлена: ID={note_id}, Новое время={deadline}, Новый текст={text}")
+        return jsonify({"message": f"Заметка {note_id} обновлена."}), 200
+    
+    except Exception as e:
+        # Обработка непредвиденных исключений
+        return jsonify({"error": "Ошибка обработки запроса.", "details": str(e)}), 500
+
