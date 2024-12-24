@@ -177,3 +177,5 @@ def update_note():
         # Обработка непредвиденных исключений
         return jsonify({"error": "Ошибка обработки запроса.", "details": str(e)}), 500
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
