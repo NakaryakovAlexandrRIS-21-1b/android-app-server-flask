@@ -37,3 +37,20 @@ class Note:
         with notes_lock:
             notes.pop(self.note_id, None)
         logger.info(f"Заметка удалена: ID={self.note_id}")
+        
+def validate_request_data(data):
+    if not data:
+        return jsonify({"error": "Пустой запрос."}), 400
+
+    if len(str(data)) > 1000:
+        return jsonify({"error": "Размер запроса превышает допустимый предел (1000 символов)."}), 400
+
+    try:
+        note_id = int(data.get('id'))
+        deadline_hours = int(data.get('hours'))
+        deadline_minutes = int(data.get('minutes'))
+        text = data.get('text', "")
+    except (TypeError, ValueError):
+        return jsonify({"error": "Некорректный формат данных. Проверьте 'id', 'hours' и 'minutes'."}), 400
+
+    return note_id, deadline_hours, deadline_minutes, text
