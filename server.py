@@ -31,3 +31,9 @@ class Note:
         if self.timer:
             self.timer.cancel()
             logger.info(f"Заметка отменена: ID={self.note_id}")
+            
+    def trigger(self):
+        logger.info(f"Заметка сработала! ID={self.note_id}, Текст={self.text}")
+        with notes_lock:
+            notes.pop(self.note_id, None)
+        logger.info(f"Заметка удалена: ID={self.note_id}")
