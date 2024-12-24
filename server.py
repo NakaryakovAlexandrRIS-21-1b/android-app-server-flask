@@ -101,3 +101,25 @@ def create_note():
         return jsonify({"error": "Ошибка обработки запроса.", "details": str(e)}), 500
 
 
+@app.route('/delete_note/<note_id>', methods=['DELETE'])
+def delete_note(note_id):
+    # Проверка, что note_id - число (дополнительная защита)
+    if not note_id.isdigit():
+        return jsonify({"error": "ID заметки должен быть числом."}), 400
+    
+    note_id = int(note_id)
+
+    # Проверка на корректность диапазона ID
+
+if note_id < 0:
+        return jsonify({"error": "ID заметки не может быть отрицательным."}), 400
+
+    with notes_lock:
+        note = notes.pop(note_id, None)
+        if note:
+            note.cancel()
+            return jsonify({"message": f"Заметка {note_id} отменена."}), 200
+        else:
+            return jsonify({"error": f"Заметка {note_id} не найдена."}), 404
+
+
